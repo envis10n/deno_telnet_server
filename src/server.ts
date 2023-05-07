@@ -30,6 +30,9 @@ type ServerOptions = {
     port: number;
 };
 
+/**
+ * A TCP server with clients wrapped in a Telnet parsing system.
+ */
 export class TelnetServer extends EE<Events> {
     private listener: Deno.Listener;
     public readonly host: string;
@@ -43,7 +46,7 @@ export class TelnetServer extends EE<Events> {
         this.listener = Deno.listen({ hostname: this.host, port: this.port });
         this.listen();
     }
-    async listen(): Promise<void> {
+    private async listen(): Promise<void> {
         try {
             for await (const conn of this.listener) {
                 let client: TelnetClient | null = new TelnetClient(conn);
@@ -129,6 +132,9 @@ export class TelnetServer extends EE<Events> {
             this.emit("close");
         }
     }
+    /**
+     * Shutdown the server by first closing all currently open client connections.
+     */
     close(): void {
         this._isClosing = true;
         for (const client of this.clients.values()) {
