@@ -38,7 +38,7 @@ Very basic GMCP support is baked in. Be sure to check the type of the payload be
 A simple echo server:
 
 ```ts
-import { TelnetServer } from "https://deno.land/x/deno_telnet_server@0.1.0/mod.ts";
+import { TelnetServer } from "https://deno.land/x/deno_telnet_server@0.1.1/mod.ts";
 
 const server = new TelnetServer({port: 3000});
 
