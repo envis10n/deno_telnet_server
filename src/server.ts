@@ -28,6 +28,7 @@ interface Events {
 type ServerOptions = {
     host?: string;
     port: number;
+    options?: number[];
 };
 
 /**
@@ -39,10 +40,14 @@ export class TelnetServer extends EE<Events> {
     public readonly port: number;
     private clients: Map<string, TelnetClient> = new Map();
     private _isClosing = false;
+    private _options: number[] = [];
     constructor(opts: ServerOptions) {
         super();
         this.host = opts.host || "127.0.0.1";
         this.port = opts.port;
+        if (opts.options != undefined) {
+            this._options = [...opts.options];
+        }
         this.listener = Deno.listen({ hostname: this.host, port: this.port });
         this.listen();
     }
@@ -53,9 +58,12 @@ export class TelnetServer extends EE<Events> {
                 this.clients.set(client.uuid, client);
                 this.emit("connect", client);
                 const parser = client.parser;
-                parser.compatibility.getOption(Option.GMCP).local = true;
-                const doGMCP = parser.will(Option.GMCP);
-                if (doGMCP != null) client.write(doGMCP.buffer);
+                // Send supported options to the client.
+                for (const option of this._options) {
+                    parser.compatibility.getOption(option).local = true;
+                    const doNeg = parser.will(option);
+                    if (doNeg != null) client.write(doNeg.buffer);
+                }
                 try {
                     for await (const ev of client.reader()) {
                         if (ev.type == EventType.Normal) {
